@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import './App.css';
 
+
+// This is a static showcase of the 12 D&D classes
 const CLASS_SHOWCASE = [
   {
     name: 'Barbarian',
@@ -101,14 +104,17 @@ const CLASS_SHOWCASE = [
 
 ];
 
+// creates an active state, counter starts at 0, showing the first class in the array
 function App() {
   const [activeClass, setActiveClass] = useState(0);
 
+// memoizes the current class, recomputes when activeClass changes
   const currentClass = useMemo(
     () => CLASS_SHOWCASE[activeClass],
     [activeClass]
   );
 
+// set up an interval to change the active class every 5 seconds, and clear the interval on unmount
   useEffect(() => {
     const timer = window.setInterval(() => {
       setActiveClass((previous) => (previous + 1) % CLASS_SHOWCASE.length);
@@ -117,6 +123,7 @@ function App() {
     return () => window.clearInterval(timer);
   }, []);
 
+// manual navigation, shows next or previous class, and wraps around the array  
   const showPrevious = () => {
     setActiveClass((previous) =>
       previous === 0 ? CLASS_SHOWCASE.length - 1 : previous - 1
@@ -129,7 +136,7 @@ function App() {
 
   return (
     <div className="App">
-      <button type="button" className="login-btn">Login</button>
+      <Link to="/login" className="login-btn">Login</Link>
       <main className="home-shell">
         <section className="home-hero" aria-labelledby="hero-title">
           <div className="hero-copy">
