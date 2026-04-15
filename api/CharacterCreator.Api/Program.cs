@@ -123,6 +123,16 @@ app.MapPost("/auth/logout", async (SignInManager<ApplicationUser> signInManager)
     return Results.Ok(new { message = "Logout successful." });
 });
 
+app.MapGet("/auth/me", (System.Security.Claims.ClaimsPrincipal user) =>
+{
+    if (user.Identity?.IsAuthenticated != true)
+    {
+        return Results.Unauthorized();
+    }
+
+    return Results.Ok(new { email = user.Identity.Name });
+}).RequireAuthorization();
+
 app.Run();
 
 public record RegisterRequest(string Email, string Password);

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import '../App.css';
 import { useState } from 'react';
 
@@ -10,7 +10,7 @@ function LoginPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
-
+    const navigate = useNavigate();
     //creates a function that runs when form is submitted
     async function handleSubmit(event) {
         //stops default form submission behavior, which would cause a page reload = bad for single page apps
@@ -45,6 +45,10 @@ function LoginPage() {
 
             const data = await response.json();
             setSuccessMessage(data.message);
+
+            setTimeout(() => {
+                navigate('/');
+            }, 500);
         } catch (error) {
             setErrorMessage('An error occurred while trying to log in. Please try again later.');
             //resets form "busy" state, allows user to try again after error
@@ -59,6 +63,20 @@ return (
         <p className="eyebrow">Account Access</p>
         <h1 id="login-title">Welcome back, adventurer.</h1>
         <p className="hero-description"> Sign in to save characters, manage builds, and continue your campaign.</p>
+            
+            {/* displays error messageif failed loggin, or display success message */}
+            {errorMessage && (
+                <p style={{ color: '#ff8a8a', marginBottom: '1rem' }}>
+                    {errorMessage}
+                </p>
+            )}
+
+            {successMessage && (
+                <p style={{ color: '#9be7a1', marginBottom: '1rem' }}>
+                    {successMessage}
+                </p>
+            )}
+
             <form onSubmit={handleSubmit} className="card-controls" style={{ flexWrap: 'wrap' }}>
                 <input 
                     type="email"
@@ -82,7 +100,10 @@ return (
                     />
                     Remember Me
                 </label>
-                <button type="submit" className="primary-cta">Sign In</button>
+                <button type="submit" className="primary-cta" disabled={isSubmitting}>
+                    {/*disables button while login request is running, provides feed back the submission is working*/}
+                    {isSubmitting ? 'Logging in...' : 'Login'}
+                </button>
             </form>
             <Link to="/" className="primary-cta" style={{ marginTop: '1rem', textDecoration: 'none' }}>Back to Home</Link>
         </div>
