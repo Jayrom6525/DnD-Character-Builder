@@ -3,6 +3,7 @@ import '../App.css';
 import { useState } from 'react';
 
 function LoginPage() {
+    const navigate = useNavigate();
     //states go here
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -10,7 +11,6 @@ function LoginPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
-    const navigate = useNavigate();
     //creates a function that runs when form is submitted
     async function handleSubmit(event) {
         //stops default form submission behavior, which would cause a page reload = bad for single page apps
@@ -46,6 +46,7 @@ function LoginPage() {
             const data = await response.json();
             setSuccessMessage(data.message);
 
+            //after successful login, wait a moment to show success message, then navigate to home page
             setTimeout(() => {
                 navigate('/');
             }, 500);

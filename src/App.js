@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './App.css';
 
 
@@ -107,6 +108,7 @@ const CLASS_SHOWCASE = [
 // creates an active state, counter starts at 0, showing the first class in the array
 function App() {
   const [activeClass, setActiveClass] = useState(0);
+  const navigate = useNavigate();
 
 // memoizes the current class, recomputes when activeClass changes
   const currentClass = useMemo(
@@ -134,9 +136,28 @@ function App() {
     setActiveClass((previous) => (previous + 1) % CLASS_SHOWCASE.length);
   };
 
+  async function handleLogout() {
+    try {
+      const response =await fetch('http://localhost:5030/auth/logout',{
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        alert('Logout failed');
+        return;
+      }
+
+      navigate('/login');
+    } catch (error) {
+      alert('An error occurred during logout');
+    }
+  }
+
   return (
     <div className="App">
       <Link to="/login" className="login-btn">Login</Link>
+      <button type='button' onCLick={handleLogout}>Logout</button> 
       <main className="home-shell">
         <section className="home-hero" aria-labelledby="hero-title">
           <div className="hero-copy">
