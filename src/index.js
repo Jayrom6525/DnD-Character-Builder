@@ -5,6 +5,7 @@ import './index.css';
 import App from './App';
 import LoginPage from './Routes/Login';
 import reportWebVitals from './reportWebVitals';
+import RegisterPage from './Routes/Register';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -13,6 +14,7 @@ root.render(
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
