@@ -109,6 +109,8 @@ const CLASS_SHOWCASE = [
 function App() {
   const [activeClass, setActiveClass] = useState(0);
   const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
 
 // memoizes the current class, recomputes when activeClass changes
   const currentClass = useMemo(
@@ -124,6 +126,25 @@ function App() {
 
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+  async function checkAuth() {
+    try {
+      const response = await fetch('http://localhost:5030/auth/me', {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      setIsAuthenticated(response.ok);
+    } catch (error) {
+      setIsAuthenticated(false);
+    } finally {
+      setAuthChecked(true);
+    }
+  }
+
+  checkAuth();
+}, []);
 
 // manual navigation, shows next or previous class, and wraps around the array  
   const showPrevious = () => {
@@ -152,6 +173,10 @@ function App() {
     } catch (error) {
       alert('An error occurred during logout');
     }
+  }
+
+  if (!authChecked) {
+    return <div>Checking Session...</div>;
   }
 
   return (
