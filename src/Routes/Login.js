@@ -1,9 +1,13 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import '../App.css';
 import { useState } from 'react';
+import { useAuth } from '../AuthContext';
 
 function LoginPage() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const from = location.state?.from?.pathname || '/';
+    const { login } = useAuth();
     //states go here
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -45,10 +49,11 @@ function LoginPage() {
 
             const data = await response.json();
             setSuccessMessage(data.message);
+            login(); //update auth context to mark user as logged in
 
             //after successful login, wait a moment to show success message, then navigate to home page
             setTimeout(() => {
-                navigate('/');
+                navigate(from, { replace: true });
             }, 500);
         } catch (error) {
             setErrorMessage('An error occurred while trying to log in. Please try again later.');

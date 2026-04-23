@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from './AuthContext';
 import './App.css';
 
 
@@ -109,8 +110,7 @@ const CLASS_SHOWCASE = [
 function App() {
   const [activeClass, setActiveClass] = useState(0);
   const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
+  const { isAuthenticated, authChecked, logout } = useAuth();
 
 // memoizes the current class, recomputes when activeClass changes
   const currentClass = useMemo(
@@ -127,24 +127,6 @@ function App() {
     return () => window.clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-  async function checkAuth() {
-    try {
-      const response = await fetch('http://localhost:5030/auth/me', {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      setIsAuthenticated(response.ok);
-    } catch (error) {
-      setIsAuthenticated(false);
-    } finally {
-      setAuthChecked(true);
-    }
-  }
-
-  checkAuth();
-}, []);
 
 // manual navigation, shows next or previous class, and wraps around the array  
   const showPrevious = () => {
@@ -169,6 +151,7 @@ function App() {
         return;
       }
 
+      logout();
       navigate('/login');
     } catch (error) {
       alert('An error occurred during logout');
@@ -181,8 +164,14 @@ function App() {
 
   return (
     <div className="App">
-      <Link to="/login" className="login-btn">Login</Link>
-      <button type='button' onCLick={handleLogout}>Logout</button> 
+      {isAuthenticated ? (
+        <button type="button" className="login-btn" onClick={handleLogout}>
+          Logout
+        </button>
+      ) : (
+        <Link to="/login" className="login-btn">Login</Link>
+      )}
+       
       <main className="home-shell">
         <section className="home-hero" aria-labelledby="hero-title">
           <div className="hero-copy">
