@@ -39,6 +39,21 @@ builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme)
     .AddIdentityCookies();
 builder.Services.AddAuthorization();
 
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Events.OnRedirectToLogin = context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        return Task.CompletedTask;
+    };
+
+    options.Events.OnRedirectToAccessDenied = context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        return Task.CompletedTask;
+    };
+});
+
 //Cores policy for react frontend
 //browser security blocks cross origin requests by default, this allows requests from frontend to backend
 builder.Services.AddCors(options =>
@@ -74,13 +89,13 @@ app.MapPost("/auth/register", async (RegisterRequest request, UserManager<Applic
 {
     if (!new EmailAddressAttribute().IsValid(request.Email))
     {
-        return Results.BadRequest(new { message = "Invalid email address."});
+        return Results.BadRequest(new { message = "Invalid email address." });
     }
 
     var existingUser = await userManager.FindByEmailAsync(request.Email);
     if (existingUser is not null)
     {
-        return Results.BadRequest(new { message = "Email is already in use."});
+        return Results.BadRequest(new { message = "Email is already in use." });
     }
 
     var user = new ApplicationUser
