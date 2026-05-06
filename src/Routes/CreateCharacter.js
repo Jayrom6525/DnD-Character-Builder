@@ -98,7 +98,9 @@ function CreateCharacter() { //page component for creating character
                         onChange={(event) => setLevel(Number(event.target.value))}
                     />
                 </div>
-
+                <button type="submit" disabled={isSubmitting}> {/* Submit button, disabled while form is submitting */}
+                    {isSubmitting ? 'Saving...' : 'Save Character'} {/* Shows "Saving..." while submitting, "Save Character" normally */}
+                </button>
             </form>
         </main>
     );
