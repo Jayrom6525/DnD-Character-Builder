@@ -148,7 +148,80 @@ app.MapGet("/auth/me", (System.Security.Claims.ClaimsPrincipal user) =>
     return Results.Ok(new { email = user.Identity.Name });
 }).RequireAuthorization();
 
+
+//makes a new character, forces login first, checks auth fields and saves charaycer to user
+app.MapPost("/characters", async (
+    CreateCharacterRequest request,
+    System.Security.Claims.ClaimsPrincipal user,
+    UserManager<ApplicationUser> userManager,
+    ApplicationDbContext db) =>
+{
+    var userId = userManager.GetUserId(user);
+    if (string.IsNullOrWhiteSpace(userId))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (string.IsNullOrWhiteSpace(request.Name) ||
+        string.IsNullOrWhiteSpace(request.CharacterClass) ||
+        string.IsNullOrWhiteSpace(request.Race))
+    {
+        return Results.BadRequest(new { message = "Name, Class, and Race are required." });
+    }
+
+    var character = new Character
+    {
+        Name = request.Name.Trim(),
+        Class = request.CharacterClass.Trim(),
+        Race = request.Race.Trim(),
+        Level = request.Level,
+        UserId = userId
+    };
+
+    db.Characters.Add(character);
+    await db.SaveChangesAsync();
+
+    return Results.Created($"/characters/{character.Id}", new
+    {
+        character.Id,
+        character.Name,
+        character.Class,
+        character.Race,
+        character.Level,
+        character.CreatedAtUtc
+    });
+}).RequireAuthorization();
+
+app.MapGet("/characters/mine", async (
+    System.Security.Claims.ClaimsPrincipal user,
+    UserManager<ApplicationUser> userManager,
+    ApplicationDbContext db) =>
+{
+    var userId = userManager.GetUserId(user);
+    if (string.IsNullOrWhiteSpace(userId))
+    {
+        return Results.Unauthorized();
+    }
+
+    var characters = await db.Characters
+         .Where(c => c.UserId == userId)
+         .OrderByDescending(c => c.CreatedAtUtc)
+         .Select(c => new
+         {
+             c.Id,
+             c.Name,
+             c.Class,
+             c.Race,
+             c.Level,
+             c.CreatedAtUtc
+         })
+         .ToListAsync();
+    return Results.Ok(characters);
+
+}).RequireAuthorization();
+
 app.Run();
 
 public record RegisterRequest(string Email, string Password);
 public record LoginRequest(string Email, string Password, bool RememberMe);
+public record CreateCharacterRequest(string Name, string CharacterClass, string Race, int Level);

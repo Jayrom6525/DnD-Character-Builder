@@ -6,7 +6,8 @@ import App from './App';
 import LoginPage from './Routes/Login';
 import reportWebVitals from './reportWebVitals';
 import RegisterPage from './Routes/Register';
-import { AuthProvider, useAuth } from './AuthContext'; 
+import { AuthProvider, useAuth } from './AuthContext';
+import CreateCharacter from './Routes/CreateCharacter';
 
 function RequireAuth({ children }) {
   const { isAuthenticated, authChecked } = useAuth();
@@ -39,6 +40,14 @@ root.render(
           />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route
+            path="/create-character"
+            element={
+              <RequireAuth>
+                <CreateCharacter />
+              </RequireAuth>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
