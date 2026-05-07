@@ -150,6 +150,8 @@ app.MapGet("/auth/me", (System.Security.Claims.ClaimsPrincipal user) =>
 
 
 //makes a new character, forces login first, checks auth fields and saves charaycer to user
+//creates a post route at /characters
+//async allows waiting for database operations
 app.MapPost("/characters", async (
     CreateCharacterRequest request,
     System.Security.Claims.ClaimsPrincipal user,
@@ -218,6 +220,32 @@ app.MapGet("/characters/mine", async (
          .ToListAsync();
     return Results.Ok(characters);
 
+}).RequireAuthorization();
+
+app.MapDelete("/characters/{id:int}", async (
+    int id,
+    System.Security.Claims.ClaimsPrincipal user,
+    UserManager<ApplicationUser> userManager,
+    ApplicationDbContext db) =>
+{
+    var userId = userManager.GetUserId(user);
+    if (string.IsNullOrWhiteSpace(userId))
+    {
+        return Results.Unauthorized();
+    }
+
+    var character = await db.Characters
+        .FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
+
+    if (character is null)
+    {
+        return Results.NotFound(new { message = "Character not found." });
+    }
+
+    db.Characters.Remove(character);
+    await db.SaveChangesAsync();
+
+    return Results.NoContent();
 }).RequireAuthorization();
 
 app.Run();
