@@ -8,6 +8,8 @@ using CharacterCreator.Api.Models;
 //Identity and FramworkCore bring authencation and SQL features
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
+
 //gives email validation attributes for user registration
 using System.ComponentModel.DataAnnotations;
 
@@ -247,6 +249,62 @@ app.MapDelete("/characters/{id:int}", async (
 
     return Results.NoContent();
 }).RequireAuthorization();
+
+//Map a PUT endpoint to update a character by ID
+app.MapPut(".characters/{id:int}", async (
+    int id, //Character ID passed in URL path
+    CreateCharacterRequest request, //Request body containing updated name, CharacterClass, Race and Levl
+    System.Security.Claims.ClaimsPrincipal user, //Current Authenticated user from auth context
+    UserManager<ApplicationUser> UserManager, //Service to retrieve user info
+    ApplicationDbContext db) => //Database context to query and update character data
+{
+    //Extract the logged in users unique ID
+    var userId = UserManager.GetUserId(user);
+
+    //if user ID is missing or empty, user is not authenticated
+    if (string.IsNullOrWhiteSpace(userId))
+    {
+        return Results.Unauthorized(); //return 401 Unautherized
+    }
+
+    //Validate that all required fields are provided and not empty
+    if (string.IsNullOrWhiteSpace(request.Name) ||
+        string.IsNullOrWhiteSpace(request.CharacterClass) ||
+        string.IsNullOrWhiteSpace(request.Race))
+    {
+        return Results.BadRequest(new { message = "Name, Class, and Race are required." }); //return 400 Bad Request with error message
+    }
+
+    //Query the database for character matching both ID and ownership (user ID)
+    var character = await db.Characters
+        .FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
+
+    //If character doesnt exist or doesnt belong to user, its a security check
+    if (character is null)
+    {
+        return Results.NotFound(new { message = "Character not found" }); //return 404 Not Found
+    }
+
+    //update character properties with trimmed user input to remove extra spaces
+    character.Name = request.Name.Trim();
+    character.Class = request.CharacterClass.Trim();
+    character.Race = request.Race.Trim();
+    character.Level = request.Level;
+
+    //save all changes to database asynchronously
+    await db.SaveChangesAsync();
+
+    //return 200 ok with the updated character data as JSON reponse
+    return Results.Ok(new
+    {
+        character.Id,
+        character.Name,
+        character.Class,
+        character.Race,
+        character.Level,
+        character.CreatedAtUtc
+    });
+}).RequireAuthorization(); //Require user to be authenticated to access this endpoint
 
 app.Run();
 
